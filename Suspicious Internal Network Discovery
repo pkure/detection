@@ -1,0 +1,8 @@
+DeviceNetworkEvents
+| where DeviceName == "{HOSTNAME}"
+| where RemoteIP startswith "10.0.0." and RemoteIP != "{HOST IP}"
+| where Protocol == "ICMP" or RemotePort == 445
+| where InitiatingProcessFileName in~ ("powershell.exe", "cmd.exe")
+| summarize TargetCount = dcount(RemoteIP), TotalConnections = count() by TimeWindow = bin(InitiatingProcessCreationTime, 5m), InitiatingProcessFileName, InitiatingProcessCommandLine
+| where TargetCount >= 3
+| order by TimeWindow desc

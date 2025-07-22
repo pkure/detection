@@ -1,0 +1,16 @@
+DeviceProcessEvents
+| where DeviceName startswith "{HOSTNAME}" 
+| where ProcessCommandLine has "schtasks" 
+| where ProcessCommandLine has_any("http://", "https://")
+| where ProcessCommandLine has "exe"
+| extend ExternalIP = extract(@"http[s]?://([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)", 1, ProcessCommandLine) // Extract the IP from the URL in the command line
+| where isnotempty(ExternalIP)
+| where not (
+    (tostring(ExternalIP) startswith "10.") // Exclude any IP starting with "10."
+    or 
+    (tostring(ExternalIP) startswith "172." and toint(split(tostring(ExternalIP), ".")[1]) >= 16 and toint(split(tostring(ExternalIP), ".")[1]) <= 31) // Exclude 172.16.0.0 - 172.31.255.255
+    or 
+    (tostring(ExternalIP) startswith "192." and toint(split(tostring(ExternalIP), ".")[1]) == 168) // Exclude 192.168.0.0 - 192.168.255.255
+)
+| project Timestamp, DeviceName, InitiatingProcessAccountName, FileName, ProcessCommandLine, ExternalIP
+| order by Timestamp desc

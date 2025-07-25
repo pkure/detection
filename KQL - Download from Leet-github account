@@ -1,0 +1,28 @@
+// This KQL is meant to fire when PowerShell is used to download a file from GitHub, and the username in the username/account contains something resembling leetspeak.
+DeviceProcessEvents
+| where DeviceName == "{HOSTNAME}" 
+| where ProcessCommandLine contains "powershell.exe" 
+    and ProcessCommandLine contains "Invoke-WebRequest" // Ensure we're capturing the use of Invoke-WebRequest
+    and ProcessCommandLine contains "githubusercontent.com"  // Make sure the URL contains githubusercontent.com
+| extend UserName = extract("githubusercontent.com/([^/]+)", 1, ProcessCommandLine)  // Correct extraction for GitHub username
+| where UserName matches regex ".*4.*"       // A -> 4
+    or UserName matches regex ".*@.*"       // A -> @
+    or UserName matches regex ".*8.*"       // B -> 8
+    or UserName matches regex ".*\\|3.*"    // B -> |3
+    or UserName matches regex ".*\\(|<.*"   // C -> ( or <
+    or UserName matches regex ".*\\|\\).*"  // D -> |) or [)
+    or UserName matches regex ".*3.*"       // E -> 3
+    or UserName matches regex ".*6.*"       // G -> 6
+    or UserName matches regex ".*9.*"       // G -> 9
+    or UserName matches regex ".*#.*"       // H -> #
+    or UserName matches regex ".*\\|-\\|.*" // H -> |-| 
+    or UserName matches regex ".*1.*"       // I -> 1
+    or UserName matches regex ".*!.*"       // I -> !
+    or UserName matches regex ".*1.*"       // L -> 1
+    or UserName matches regex ".*\\|.*"     // L -> |
+    or UserName matches regex ".*0.*"       // O -> 0
+    or UserName matches regex ".*5.*"       // S -> 5
+    or UserName matches regex ".*\\$.*"     // S -> $
+    or UserName matches regex ".*7.*"       // T -> 7
+    or UserName matches regex ".*\\+.*"     // T -> +
+    | project-away SHA1, SHA256, MD5, FileSize, ProcessVersionInfoCompanyName, ProcessVersionInfoProductName, DeviceId, ProcessVersionInfoProductVersion, AccountSid, InitiatingProcessAccountSid, InitiatingProcessSHA1, InitiatingProcessSHA256, InitiatingProcessMD5

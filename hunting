@@ -1,0 +1,8 @@
+Hunting Queries
+
+Password cracking use:
+
+(ProcessName="C:\Program Files\john\john.exe" OR
+ ProcessName="C:\Tools\hashcat\hashcat.exe" OR
+ CommandLine="*pdf2john.pl*" OR
+ CommandLine="*zip2john*")

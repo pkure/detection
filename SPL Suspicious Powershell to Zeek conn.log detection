@@ -1,0 +1,1 @@
+# Attack pattern: assumed breach on Windows 11 VM (WS01). Splunk SPL will detect suspicious PowerShell being ran on Host, then Zeek logs near that time will show unusual connections via conn.log.

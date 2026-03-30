@@ -1,1 +1,18 @@
-# Attack pattern: assumed breach on Windows 11 VM (WS01). Splunk SPL will detect suspicious PowerShell being ran on Host, then Zeek logs near that time will show unusual connections via conn.log.
+# SPL query identifies suspicious PowerShell commands, by scoring known attacker techniques like -enc, -nop, -w hidden, -ep bypass, or download patterns, and using overall score to determine if the PowerShell command is suspicious.
+
+
+index=* source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 powershell.exe
+| eval cmd=lower(CommandLine)
+| eval score=0
+| eval score=score + if(like(cmd,"% -enc %") OR like(cmd,"% -encodedcommand %"), 2, 0)
+| eval score=score + if(like(cmd,"% -nop %") OR like(cmd,"% -noni %"), 1, 0)
+| eval score=score + if(like(cmd,"% -w hidden%") OR like(cmd,"% -windowstyle hidden%"), 2, 0)
+| eval score=score + if(like(cmd,"% -ep bypass%") OR like(cmd,"% -executionpolicy bypass%"), 2, 0)
+| eval score=score + if(like(cmd,"%downloadstring%") OR like(cmd,"%net.webclient%"), 2, 0)
+| eval score=score + if(like(cmd,"%invoke-expression%") OR like(cmd,"%iex %"), 2, 0)
+| eval score=score + if(like(cmd,"%invoke-webrequest%") OR like(cmd,"%iwr %"), 1, 0)
+| eval score=score + if(match(cmd,"[a-z0-9+/=]{40,}"), 2, 0)
+| where score >= 3
+| table _time host CommandLine ParentProcessName Image score
+| sort - score - _time
+

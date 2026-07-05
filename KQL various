@@ -5,3 +5,6 @@ Activity from suspicious folders
 DeviceProcessEvents
 | where FolderPath has @"\spool\drivers\color\"
 | project Timestamp, DeviceName, AccountName,, FileName, FolderPath, InitiatingProcessFileName
+
+
+
